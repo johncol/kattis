@@ -51,6 +51,7 @@ class Alan {
     int minLength = solutionsSortedByLength.get(0).length();
     return solutionsSortedByLength.stream()
         .filter(solution -> solution.length() == minLength)
+        .sorted()
         .findFirst()
         .map(solution -> PuzzleSolution.solved(puzzle, solution))
         .orElseThrow(() -> new RuntimeException("No solution string had the calculated min length"));
