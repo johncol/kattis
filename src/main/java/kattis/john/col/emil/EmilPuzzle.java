@@ -65,12 +65,18 @@ class Alan {
       return string1.length() > string2.length() ? 1 : -1;
     });
 
+    int minLength = Integer.MAX_VALUE;
     for (PairsInspected pairsInspectedSolution : pairsInspectedSolutions) {
-      String solution = pairsInspectedSolution.buildSolution();
-      sortedSolutions.add(solution);
+      int pairsInspectedSolutionLength = pairsInspectedSolution.getLength();
+      if (pairsInspectedSolutionLength <= minLength) {
+        minLength = pairsInspectedSolutionLength;
+        String solution = pairsInspectedSolution.buildSolution();
+        sortedSolutions.add(solution);
+      }
     }
 
-    return PuzzleSolution.solved(puzzle, sortedSolutions.iterator().next());
+    String solution = sortedSolutions.iterator().next();
+    return PuzzleSolution.solved(puzzle, solution);
   }
 
   private static List<PairsInspected> findSolutions(PairsInspected pairsInspected, String missingSuffix, PuzzlePair.Part part) {
@@ -200,6 +206,7 @@ class PairsInspected {
 
   private final Puzzle puzzle;
   private final byte[] indexes;
+//  private final int length;
 
   public PairsInspected(Puzzle puzzle) {
     this(puzzle, new byte[]{});
@@ -208,6 +215,13 @@ class PairsInspected {
   public PairsInspected(Puzzle puzzle, byte[] indexes) {
     this.puzzle = puzzle;
     this.indexes = indexes;
+//
+//    PuzzlePair[] pairs = puzzle.getPairs();
+//    int length = 0;
+//    for (byte index : indexes) {
+//      length += pairs[index].getFirst().length();
+//    }
+//    this.length = length;
   }
 
   public PuzzlePair[] findNonInspectedPairs() {
@@ -242,6 +256,15 @@ class PairsInspected {
       stringBuilder.append(pairs[indexes[i]].getFirst());
     }
     return stringBuilder.toString();
+  }
+
+  public int getLength() {
+    PuzzlePair[] pairs = puzzle.getPairs();
+    int length = 0;
+    for (byte index : indexes) {
+      length += pairs[index].getFirst().length();
+    }
+    return length;
   }
 }
 
