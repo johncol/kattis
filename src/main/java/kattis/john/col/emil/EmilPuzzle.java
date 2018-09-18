@@ -1,8 +1,5 @@
 package kattis.john.col.emil;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,14 +7,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class EmilPuzzle {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     Puzzle[] puzzles = Emil.giveMeThePuzzles();
-//    Puzzle[] puzzles = Emil.giveMeThePuzzlesFromSampleFile(args);
     Alan.solveThePuzzles(puzzles);
   }
 
@@ -41,7 +35,7 @@ class Alan {
   private static PuzzleSolution solvePuzzle(Puzzle puzzle) {
     PuzzlePair[] pairsSelectableToStart = Alan.findPairsSelectableToStart(puzzle.getPairs());
 
-    List<PairsInspected> pairsInspectedSolutions = new ArrayList<>();
+    List<PairsInspected> solutions = new ArrayList<>();
     for (PuzzlePair startingPair : pairsSelectableToStart) {
       if (startingPair == null) {
         break;
@@ -50,10 +44,10 @@ class Alan {
       String missingSuffix = Alan.findMissingSuffix(startingPair.getFirst(), startingPair.getSecond());
       PuzzlePair.Part pairPart = startingPair.firstStartsWithSecond() ? PuzzlePair.Part.SECOND : PuzzlePair.Part.FIRST;
       List<PairsInspected> startingPairSolutions = Alan.findSolutions(pairsInspected, missingSuffix, pairPart);
-      pairsInspectedSolutions.addAll(startingPairSolutions);
+      solutions.addAll(startingPairSolutions);
     }
 
-    if (pairsInspectedSolutions.isEmpty()) {
+    if (solutions.isEmpty()) {
       return PuzzleSolution.unsolvable(puzzle);
     }
 
@@ -66,17 +60,16 @@ class Alan {
     });
 
     int minLength = Integer.MAX_VALUE;
-    for (PairsInspected pairsInspectedSolution : pairsInspectedSolutions) {
-      int pairsInspectedSolutionLength = pairsInspectedSolution.getLength();
-      if (pairsInspectedSolutionLength <= minLength) {
-        minLength = pairsInspectedSolutionLength;
-        String solution = pairsInspectedSolution.buildSolution();
-        sortedSolutions.add(solution);
+    for (PairsInspected solution : solutions) {
+      int solutionLength = solution.getLength();
+      if (solutionLength <= minLength) {
+        minLength = solutionLength;
+        sortedSolutions.add(solution.buildSolution());
       }
     }
 
-    String solution = sortedSolutions.iterator().next();
-    return PuzzleSolution.solved(puzzle, solution);
+    String shortestSolution = sortedSolutions.iterator().next();
+    return PuzzleSolution.solved(puzzle, shortestSolution);
   }
 
   private static List<PairsInspected> findSolutions(PairsInspected pairsInspected, String missingSuffix, PuzzlePair.Part part) {
@@ -206,7 +199,6 @@ class PairsInspected {
 
   private final Puzzle puzzle;
   private final byte[] indexes;
-//  private final int length;
 
   public PairsInspected(Puzzle puzzle) {
     this(puzzle, new byte[]{});
@@ -215,13 +207,6 @@ class PairsInspected {
   public PairsInspected(Puzzle puzzle, byte[] indexes) {
     this.puzzle = puzzle;
     this.indexes = indexes;
-//
-//    PuzzlePair[] pairs = puzzle.getPairs();
-//    int length = 0;
-//    for (byte index : indexes) {
-//      length += pairs[index].getFirst().length();
-//    }
-//    this.length = length;
   }
 
   public PuzzlePair[] findNonInspectedPairs() {
@@ -273,10 +258,6 @@ class Emil {
   public static Puzzle[] giveMeThePuzzles() {
     List<String> inputLines = readInputLines();
     return mapToPuzzles(inputLines);
-  }
-
-  public static Puzzle[] giveMeThePuzzlesFromSampleFile(String[] args) throws IOException {
-    return Emil.mapToPuzzles(Files.readAllLines(Paths.get(args[0])));
   }
 
   private static List<String> readInputLines() {
