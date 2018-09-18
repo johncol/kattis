@@ -9,52 +9,68 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class EmilPuzzle {
 
   public static void main(String[] args) throws IOException {
-//    List<Puzzle> puzzles = Emil.giveMeThePuzzles();
-    List<Puzzle> puzzles = Emil.mapToPuzzles(Files.readAllLines(Paths.get(args[0])));
+    Puzzle[] puzzles = Emil.giveMeThePuzzles();
+//    Puzzle[] puzzles = Emil.giveMeThePuzzlesFromSampleFile(args);
     Alan.solveThePuzzles(puzzles);
   }
 
 }
 
+interface Settings {
+  int MAX_TEST_CASES = 5;
+}
+
 class Alan {
 
-  public static void solveThePuzzles(List<Puzzle> puzzles) {
+  public static void solveThePuzzles(Puzzle[] puzzles) {
     for (Puzzle puzzle : puzzles) {
-      PuzzleSolution puzzleSolution = solvePuzzle(puzzle);
-      System.out.println(puzzleSolution);
+      if (puzzle != null) {
+        PuzzleSolution puzzleSolution = solvePuzzle(puzzle);
+        System.out.println(puzzleSolution);
+      }
     }
   }
 
   private static PuzzleSolution solvePuzzle(Puzzle puzzle) {
-    List<PuzzlePair> pairsSelectableToStart = Alan.findPairsSelectableToStart(puzzle.getPairs());
+    PuzzlePair[] pairsSelectableToStart = Alan.findPairsSelectableToStart(puzzle.getPairs());
 
-    List<String> solutionsSortedByLength = pairsSelectableToStart.stream()
-        .flatMap(startingPair -> {
-          PairsInspected pairsInspected = new PairsInspected(puzzle).withNewInspectedIndex(startingPair);
-          String missingSuffix = Alan.findMissingSuffix(startingPair.getFirst(), startingPair.getSecond());
-          PuzzlePair.Part pairPart = startingPair.firstStartsWithSecond() ? PuzzlePair.Part.SECOND : PuzzlePair.Part.FIRST;
-          return Alan.findSolutions(pairsInspected, missingSuffix, pairPart).stream();
-        })
-        .map(PairsInspected::buildSolution)
-        .sorted((solution1, solution2) -> solution1.length() > solution2.length() ? 1 : -1)
-        .collect(Collectors.toList());
+    List<PairsInspected> pairsInspectedSolutions = new ArrayList<>();
+    for (PuzzlePair startingPair : pairsSelectableToStart) {
+      if (startingPair == null) {
+        break;
+      }
+      PairsInspected pairsInspected = new PairsInspected(puzzle).withNewInspectedIndex(startingPair);
+      String missingSuffix = Alan.findMissingSuffix(startingPair.getFirst(), startingPair.getSecond());
+      PuzzlePair.Part pairPart = startingPair.firstStartsWithSecond() ? PuzzlePair.Part.SECOND : PuzzlePair.Part.FIRST;
+      List<PairsInspected> startingPairSolutions = Alan.findSolutions(pairsInspected, missingSuffix, pairPart);
+      pairsInspectedSolutions.addAll(startingPairSolutions);
+    }
 
-    if (solutionsSortedByLength.isEmpty()) {
+    if (pairsInspectedSolutions.isEmpty()) {
       return PuzzleSolution.unsolvable(puzzle);
     }
 
-    int minLength = solutionsSortedByLength.get(0).length();
-    return solutionsSortedByLength.stream()
-        .filter(solution -> solution.length() == minLength)
-        .sorted()
-        .findFirst()
-        .map(solution -> PuzzleSolution.solved(puzzle, solution))
-        .orElseThrow(() -> new RuntimeException("No solution string had the calculated min length"));
+    TreeSet<String> sortedSolutions = new TreeSet<>((String string1, String string2) -> {
+      boolean haveSameLength = string1.length() == string2.length();
+      if (haveSameLength) {
+        return string1.compareTo(string2);
+      }
+      return string1.length() > string2.length() ? 1 : -1;
+    });
+
+    for (PairsInspected pairsInspectedSolution : pairsInspectedSolutions) {
+      String solution = pairsInspectedSolution.buildSolution();
+      sortedSolutions.add(solution);
+    }
+
+    return PuzzleSolution.solved(puzzle, sortedSolutions.iterator().next());
   }
 
   private static List<PairsInspected> findSolutions(PairsInspected pairsInspected, String missingSuffix, PuzzlePair.Part part) {
@@ -97,12 +113,12 @@ class Alan {
         secondString.substring(firstString.length());
   }
 
-  private static List<PuzzlePair> findPairsSelectableToStart(PuzzlePair[] pairs) {
-    List<PuzzlePair> starters = new ArrayList<>();
-    for (int i = 0; i < pairs.length; i++) {
-      PuzzlePair pair = pairs[i];
+  private static PuzzlePair[] findPairsSelectableToStart(PuzzlePair[] pairs) {
+    PuzzlePair[] starters = new PuzzlePair[pairs.length];
+    int index = 0;
+    for (PuzzlePair pair : pairs) {
       if (pair.firstStartsWithSecond() || pair.secondStartsWithFirst()) {
-        starters.add(pair);
+        starters[index++] = pair;
       }
     }
     return starters;
@@ -231,9 +247,13 @@ class PairsInspected {
 
 class Emil {
 
-  public static List<Puzzle> giveMeThePuzzles() {
+  public static Puzzle[] giveMeThePuzzles() {
     List<String> inputLines = readInputLines();
     return mapToPuzzles(inputLines);
+  }
+
+  public static Puzzle[] giveMeThePuzzlesFromSampleFile(String[] args) throws IOException {
+    return Emil.mapToPuzzles(Files.readAllLines(Paths.get(args[0])));
   }
 
   private static List<String> readInputLines() {
@@ -246,13 +266,14 @@ class Emil {
     return lines;
   }
 
-  public static List<Puzzle> mapToPuzzles(List<String> inputLines) {
-    List<Puzzle> puzzles = new ArrayList<>();
+  public static Puzzle[] mapToPuzzles(List<String> inputLines) {
+    Puzzle[] puzzles = new Puzzle[Settings.MAX_TEST_CASES];
+    byte puzzleIndex = 0;
     byte linesIndex = 0;
     while (linesIndex < inputLines.size()) {
       byte pairsCount = Byte.parseByte(inputLines.get(linesIndex));
-      Puzzle puzzle = Emil.buildPuzzle(inputLines, (byte) (puzzles.size() + 1), linesIndex, pairsCount);
-      puzzles.add(puzzle);
+      Puzzle puzzle = Emil.buildPuzzle(inputLines, (byte) (puzzleIndex + 1), linesIndex, pairsCount);
+      puzzles[puzzleIndex++] = puzzle;
       linesIndex += (pairsCount + 1);
     }
     return puzzles;
