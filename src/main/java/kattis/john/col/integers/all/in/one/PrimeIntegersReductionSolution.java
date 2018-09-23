@@ -1,28 +1,7 @@
 package kattis.john.col.integers.all.in.one;
 
-/**
- * Simple yet moderately fast I/O routines.
- *
- * Example usage:
- *
- * PrimeIntegersReductionSolution io = new PrimeIntegersReductionSolution(System.in, System.out);
- *
- * while (io.hasMoreTokens()) { int n = io.getInt(); double d = io.getDouble(); double ans = d*n;
- *
- * io.println("Answer: " + ans); }
- *
- * io.close();
- *
- *
- * Some notes:
- *
- * - When done, you should always do io.close() or io.flush() on the PrimeIntegersReductionSolution-instance, otherwise, you may lose output.
- *
- * - The getInt(), getDouble(), and getLong() methods will throw an exception if there is no more data in the input, so it is generally a good idea to use hasMoreTokens() to check for end-of-file.
- *
- * @author: Kattis
- */
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.io.BufferedReader;
 import java.io.BufferedOutputStream;
@@ -36,13 +15,209 @@ public class PrimeIntegersReductionSolution {
 
   public static final int END_OF_INPUT = 4;
 
+  private final PrimeReducer primeReducer = new PrimeReducer();
+
+  public String reduce(int x) {
+    return primeReducer.reduce(x).toString();
+  }
+
   public static void main(String[] args) {
     Kattio kattio = new Kattio(System.in);
+    PrimeReducer primeReducer = new PrimeReducer();
 
     int number;
     while (kattio.hasMoreTokens() && (number = kattio.getInt()) != END_OF_INPUT) {
-      System.out.println(number);
+      System.out.println(primeReducer.reduce(number));
     }
+  }
+
+}
+
+class PrimeReducer {
+
+  private final FactorsFinder factorsFinder = new FactorsFinder();
+
+  public static void main(String[] args) {
+  }
+
+  public ReductionResult reduce(int x) {
+    if (Helpers.isPrime(x)) {
+      return new ReductionResult(x, 1);
+    }
+
+    return reduce(factorsFinder.factorsOf(x).getSum())
+        .plusOneIteration();
+  }
+
+}
+
+class FactorsFinder {
+
+  public Factors factorsOf(int x) {
+    if (Helpers.isPrime(x)) {
+      return Factors.of(x);
+    }
+
+    int counterOf2 = 0;
+    int number = x;
+    while (Helpers.isDivisibleBy(number, 2)) {
+      number = number / 2;
+      counterOf2++;
+    }
+    if (number == 1) {
+      return Factors.powerOf2(counterOf2);
+    }
+
+    Factors factorsOfNumber = findFactorsOfOddNumberByFermatTheorem(number);
+    return factorsOfNumber.combinedWithPowerOf2(counterOf2);
+  }
+
+  private Factors findFactorsOfOddNumberByFermatTheorem(int x) {
+    int a = (int) Math.ceil(Math.sqrt(x));
+    int b = a * a - x;
+
+    while (!isSquare(b)) {
+      a++;
+      b = a * a - x;
+    }
+    b = (int) Math.sqrt(b);
+
+    int factorA = a + b;
+    int factorB = a - b;
+
+    boolean isPrimeFactorA = Helpers.isPrime(factorA);
+    boolean isPrimeFactorB = Helpers.isPrime(factorB);
+
+    if (isPrimeFactorA && isPrimeFactorB) {
+      return Factors.of(factorA, factorB);
+    } else if (isPrimeFactorA) {
+      return findFactorsOfOddNumberByFermatTheorem(factorB).includingPrime(factorA);
+    } else if (isPrimeFactorB) {
+      return findFactorsOfOddNumberByFermatTheorem(factorA).includingPrime(factorB);
+    } else {
+      Factors factorsOfA = findFactorsOfOddNumberByFermatTheorem(factorA);
+      Factors factorsOfB = findFactorsOfOddNumberByFermatTheorem(factorB);
+      return Factors.of(factorsOfA, factorsOfB);
+    }
+  }
+
+  private boolean isSquare(double x) {
+    double sqrt = Math.sqrt(x);
+    double floor = Math.floor(sqrt);
+    return sqrt - floor == 0;
+  }
+
+}
+
+class Factors {
+
+  private List<Integer> factors;
+
+  private Factors(List<Integer> factors) {
+    this.factors = factors;
+  }
+
+  public static Factors of(int x) {
+    List<Integer> list = new ArrayList<>(2);
+    list.add(x);
+    return new Factors(list);
+  }
+
+  public static Factors of(int a, int b) {
+    List<Integer> list = new ArrayList<>(2);
+    if (a != 1) {
+      list.add(a);
+    }
+    if (b != 1) {
+      list.add(b);
+    }
+    return new Factors(list);
+  }
+
+  public static Factors powerOf2(int power) {
+    List<Integer> list = new ArrayList<>(power);
+    addNTimes2ToList(power, list);
+    return new Factors(list);
+  }
+
+  public static Factors of(Factors factorsOfA, Factors factorsOfB) {
+    List<Integer> list = new ArrayList<>(factorsOfA.factors.size() + factorsOfB.factors.size());
+    list.addAll(factorsOfA.factors);
+    list.addAll(factorsOfB.factors);
+    return new Factors(list);
+  }
+
+  public Factors combinedWithPowerOf2(int counterOf2) {
+    if (counterOf2 > 0) {
+      addNTimes2ToList(counterOf2, factors);
+    }
+    return this;
+  }
+
+  public Factors includingPrime(int prime) {
+    if (prime != 1) {
+      factors.add(prime);
+    }
+    return this;
+  }
+
+  public List<Integer> getList() {
+    return factors;
+  }
+
+  public int getSum() {
+    int sum = 0;
+    for (int factor : factors) {
+      sum += factor;
+    }
+    return sum;
+  }
+
+  private static void addNTimes2ToList(int power, List<Integer> list) {
+    for (int i = 0; i < power; i++) {
+      list.add(2);
+    }
+  }
+}
+
+class ReductionResult {
+
+  private int lastPrime;
+  private int iterations;
+
+  public ReductionResult(int lastPrime, int iterations) {
+    this.lastPrime = lastPrime;
+    this.iterations = iterations;
+  }
+
+  @Override
+  public String toString() {
+    return lastPrime + " " + iterations;
+  }
+
+  public ReductionResult plusOneIteration() {
+    iterations++;
+    return this;
+  }
+}
+
+class Helpers {
+
+  static boolean isPrime(int x) {
+    for (int i = 2; i <= Math.sqrt(x); i++) {
+      if (isDivisibleBy(x, i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static boolean isDivisibleBy(int x, int y) {
+    return modulus(x, y) == 0;
+  }
+
+  static int modulus(int x, int y) {
+    return Math.floorMod(x, y);
   }
 
 }

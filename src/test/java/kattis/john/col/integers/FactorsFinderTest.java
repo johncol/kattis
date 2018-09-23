@@ -3,8 +3,6 @@ package kattis.john.col.integers;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class FactorsFinderTest {
