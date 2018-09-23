@@ -37,11 +37,8 @@ class PrimeReducer {
 
   private final FactorsFinder factorsFinder = new FactorsFinder();
 
-  public static void main(String[] args) {
-  }
-
   public ReductionResult reduce(int x) {
-    if (Helpers.isPrime(x)) {
+    if (Numbers.isPrime(x)) {
       return new ReductionResult(x, 1);
     }
 
@@ -54,13 +51,13 @@ class PrimeReducer {
 class FactorsFinder {
 
   public Factors factorsOf(int x) {
-    if (Helpers.isPrime(x)) {
+    if (Numbers.isPrime(x)) {
       return Factors.of(x);
     }
 
     int counterOf2 = 0;
     int number = x;
-    while (Helpers.isDivisibleBy(number, 2)) {
+    while (Numbers.isDivisibleBy(number, 2)) {
       number = number / 2;
       counterOf2++;
     }
@@ -85,8 +82,8 @@ class FactorsFinder {
     int factorA = a + b;
     int factorB = a - b;
 
-    boolean isPrimeFactorA = Helpers.isPrime(factorA);
-    boolean isPrimeFactorB = Helpers.isPrime(factorB);
+    boolean isPrimeFactorA = Numbers.isPrime(factorA);
+    boolean isPrimeFactorB = Numbers.isPrime(factorB);
 
     if (isPrimeFactorA && isPrimeFactorB) {
       return Factors.of(factorA, factorB);
@@ -201,7 +198,7 @@ class ReductionResult {
   }
 }
 
-class Helpers {
+class Numbers {
 
   static boolean isPrime(int x) {
     for (int i = 2; i <= Math.sqrt(x); i++) {
