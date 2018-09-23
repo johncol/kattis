@@ -81,6 +81,11 @@ class FactorsFinder {
     int factorA = a + b;
     int factorB = a - b;
 
+    boolean factorAEqualsOne = factorA == 1;
+    if (factorAEqualsOne || factorB == 1) {
+      return Factors.of(factorAEqualsOne ? factorB : factorA);
+    }
+
     boolean isPrimeFactorA = Numbers.isPrime(factorA);
     boolean isPrimeFactorB = Numbers.isPrime(factorB);
 
@@ -88,13 +93,17 @@ class FactorsFinder {
       return Factors.of(factorA, factorB);
     } else if (isPrimeFactorA) {
       return findFactorsOfOddNumberByFermatTheorem(factorB).includingPrime(factorA);
-    } else if (isPrimeFactorB) {
-      return findFactorsOfOddNumberByFermatTheorem(factorA).includingPrime(factorB);
     } else {
-      Factors factorsOfA = findFactorsOfOddNumberByFermatTheorem(factorA);
-      Factors factorsOfB = findFactorsOfOddNumberByFermatTheorem(factorB);
-      return Factors.of(factorsOfA, factorsOfB);
+      return findFactorsOfOddNumberByFermatTheorem(factorA).includingPrime(factorB);
     }
+
+//    else if (isPrimeFactorB) {
+//      return findFactorsOfOddNumberByFermatTheorem(factorA).includingPrime(factorB);
+//    } else {
+//      Factors factorsOfA = findFactorsOfOddNumberByFermatTheorem(factorA);
+//      Factors factorsOfB = findFactorsOfOddNumberByFermatTheorem(factorB);
+//      return Factors.of(factorsOfA, factorsOfB);
+//    }
   }
 
   private boolean isSquare(double x) {
@@ -123,12 +132,8 @@ class Factors {
 
   static Factors of(int a, int b) {
     List<Integer> list = new ArrayList<>(2);
-    if (a != 1) {
-      list.add(a);
-    }
-    if (b != 1) {
-      list.add(b);
-    }
+    list.add(a);
+    list.add(b);
     return new Factors(list, 0);
   }
 
