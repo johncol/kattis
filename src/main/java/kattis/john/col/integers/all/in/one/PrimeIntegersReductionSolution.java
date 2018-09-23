@@ -1,5 +1,6 @@
 package kattis.john.col.integers.all.in.one;
 
+import java.util.HashSet;
 import java.util.StringTokenizer;
 import java.io.BufferedReader;
 import java.io.BufferedOutputStream;
@@ -187,12 +188,21 @@ class ReductionResult {
 
 class Numbers {
 
+  private static final HashSet<Integer> primes = new HashSet<>();
+
   static boolean isPrime(int x) {
-    for (int i = 2; i <= Math.sqrt(x); i++) {
+    if (x <= 3) return true;
+    if (isDivisibleBy(x, 2)) return false;
+    if (primes.contains(x)) return true;
+
+    double xSqrt = Math.sqrt(x);
+    for (int i = 3; i <= xSqrt; i += 2) {
       if (isDivisibleBy(x, i)) {
         return false;
       }
     }
+
+    primes.add(x);
     return true;
   }
 
