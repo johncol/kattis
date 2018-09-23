@@ -1,7 +1,6 @@
 package kattis.john.col.integers.all.in.one;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.io.BufferedReader;
@@ -14,7 +13,7 @@ import java.io.OutputStream;
 
 public class PrimeIntegersReductionSolution {
 
-  public static final int END_OF_INPUT = 4;
+  private static final int END_OF_INPUT = 4;
 
   private final PrimeReducer primeReducer = new PrimeReducer();
 
@@ -38,11 +37,10 @@ class PrimeReducer {
 
   private final FactorsFinder factorsFinder = new FactorsFinder();
 
-  public ReductionResult reduce(int x) {
+  ReductionResult reduce(int x) {
     if (Numbers.isPrime(x)) {
       return new ReductionResult(x, 1);
     }
-
     return reduce(factorsFinder.factorsOf(x).getSum())
         .plusOneIteration();
   }
@@ -51,7 +49,7 @@ class PrimeReducer {
 
 class FactorsFinder {
 
-  public Factors factorsOf(int x) {
+  Factors factorsOf(int x) {
     if (Numbers.isPrime(x)) {
       return Factors.of(x);
     }
@@ -110,18 +108,20 @@ class FactorsFinder {
 class Factors {
 
   private List<Integer> factors;
+  private int countOf2 = 0;
 
-  private Factors(List<Integer> factors) {
+  private Factors(List<Integer> factors, int countOf2) {
     this.factors = factors;
+    this.countOf2 = countOf2;
   }
 
-  public static Factors of(int x) {
+  static Factors of(int x) {
     List<Integer> list = new ArrayList<>(2);
     list.add(x);
-    return new Factors(list);
+    return new Factors(list, 0);
   }
 
-  public static Factors of(int a, int b) {
+  static Factors of(int a, int b) {
     List<Integer> list = new ArrayList<>(2);
     if (a != 1) {
       list.add(a);
@@ -129,108 +129,38 @@ class Factors {
     if (b != 1) {
       list.add(b);
     }
-    return new Factors(list);
+    return new Factors(list, 0);
   }
 
-  public static Factors powerOf2(int power) {
-    List<Integer> list = new ArrayList<>(power);
-    addNTimes2ToList(power, list);
-    return new Factors(list);
+  static Factors powerOf2(int power) {
+    return new Factors(new ArrayList<>(), power);
   }
 
-  public static Factors of(Factors factorsOfA, Factors factorsOfB) {
+  static Factors of(Factors factorsOfA, Factors factorsOfB) {
     List<Integer> list = new ArrayList<>(factorsOfA.factors.size() + factorsOfB.factors.size());
     list.addAll(factorsOfA.factors);
     list.addAll(factorsOfB.factors);
-    return new Factors(list);
+    return new Factors(list, 0);
   }
 
-  public Factors combinedWithPowerOf2(int counterOf2) {
-    if (counterOf2 > 0) {
-      addNTimes2ToList(counterOf2, factors);
-    }
+  Factors combinedWithPowerOf2(int countOf2) {
+    this.countOf2 += countOf2;
     return this;
   }
 
-  public Factors includingPrime(int prime) {
+  Factors includingPrime(int prime) {
     if (prime != 1) {
       factors.add(prime);
     }
     return this;
   }
 
-  public int getSum() {
+  int getSum() {
     int sum = 0;
     for (int factor : factors) {
       sum += factor;
     }
-    return sum;
-  }
-
-  private static void addNTimes2ToList(int power, List<Integer> list) {
-    for (int i = 0; i < power; i++) {
-      list.add(2);
-    }
-  }
-}
-
-class FactorsWithArray {
-
-  private int[] factors;
-
-  private FactorsWithArray(int ...factors) {
-    this.factors = factors;
-  }
-
-  public static FactorsWithArray of(int x) {
-    return new FactorsWithArray(x);
-  }
-
-  public static FactorsWithArray of(int a, int b) {
-    return new FactorsWithArray(a, b);
-  }
-
-  public static FactorsWithArray powerOf2(int power) {
-    int[] factors = new int[power];
-    Arrays.fill(factors, 2);
-    return new FactorsWithArray(factors);
-  }
-
-  public static FactorsWithArray of(FactorsWithArray factorsOfA, FactorsWithArray factorsOfB) {
-    int[] factors = Arrays.copyOf(factorsOfA.factors, factorsOfA.factors.length + factorsOfB.factors.length);
-    return new FactorsWithArray(factors);
-  }
-
-  public FactorsWithArray combinedWithPowerOf2(int counterOf2) {
-    if (counterOf2 > 0) {
-      factors = addNTimes2ToList(counterOf2, factors);
-    }
-    return this;
-  }
-
-  public FactorsWithArray includingPrime(int prime) {
-    if (prime != 1) {
-      factors = Arrays.copyOf(factors, factors.length + 1);
-      factors[factors.length - 1] = prime;
-    }
-    return this;
-  }
-
-  public int getSum() {
-    int sum = 0;
-    for (int factor : factors) {
-      sum += factor;
-    }
-    return sum;
-  }
-
-  private static int[] addNTimes2ToList(int power, int[] factors) {
-    int originalLength = factors.length;
-    int[] newFactors = Arrays.copyOf(factors, originalLength + power);
-    for (int i = originalLength; i < originalLength + power; i++) {
-      newFactors[i] = 2;
-    }
-    return newFactors;
+    return sum + (countOf2 * 2);
   }
 }
 
@@ -239,19 +169,19 @@ class ReductionResult {
   private int lastPrime;
   private int iterations;
 
-  public ReductionResult(int lastPrime, int iterations) {
+  ReductionResult(int lastPrime, int iterations) {
     this.lastPrime = lastPrime;
     this.iterations = iterations;
+  }
+
+  ReductionResult plusOneIteration() {
+    iterations++;
+    return this;
   }
 
   @Override
   public String toString() {
     return lastPrime + " " + iterations;
-  }
-
-  public ReductionResult plusOneIteration() {
-    iterations++;
-    return this;
   }
 }
 
@@ -307,7 +237,6 @@ class Kattio extends PrintWriter {
   public String getWord() {
     return nextToken();
   }
-
 
   private BufferedReader r;
   private String line;
