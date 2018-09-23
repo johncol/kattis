@@ -1,7 +1,5 @@
 package kattis.john.col.integers.all.in.one;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.StringTokenizer;
 import java.io.BufferedReader;
 import java.io.BufferedOutputStream;
@@ -116,37 +114,32 @@ class FactorsFinder {
 
 class Factors {
 
-  private List<Integer> factors;
+  private int[] factors = new int[100];
+  private int length = 0;
   private int countOf2 = 0;
 
-  private Factors(List<Integer> factors, int countOf2) {
-    this.factors = factors;
+  private Factors(int countOf2) {
     this.countOf2 = countOf2;
   }
 
   static Factors of(int x) {
-    List<Integer> list = new ArrayList<>(2);
-    list.add(x);
-    return new Factors(list, 0);
+    return new Factors(0).add(x);
   }
 
   static Factors of(int a, int b) {
-    List<Integer> list = new ArrayList<>(2);
-    list.add(a);
-    list.add(b);
-    return new Factors(list, 0);
+    return new Factors(0).add(a).add(b);
   }
 
   static Factors powerOf2(int power) {
-    return new Factors(new ArrayList<>(), power);
+    return new Factors(power);
   }
 
-  static Factors of(Factors factorsOfA, Factors factorsOfB) {
-    List<Integer> list = new ArrayList<>(factorsOfA.factors.size() + factorsOfB.factors.size());
-    list.addAll(factorsOfA.factors);
-    list.addAll(factorsOfB.factors);
-    return new Factors(list, 0);
-  }
+//  static Factors of(Factors factorsOfA, Factors factorsOfB) {
+//    List<Integer> list = new ArrayList<>(factorsOfA.factors.size() + factorsOfB.factors.size());
+//    list.addAll(factorsOfA.factors);
+//    list.addAll(factorsOfB.factors);
+//    return new Factors(list, 0);
+//  }
 
   Factors combinedWithPowerOf2(int countOf2) {
     this.countOf2 += countOf2;
@@ -154,10 +147,7 @@ class Factors {
   }
 
   Factors includingPrime(int prime) {
-    if (prime != 1) {
-      factors.add(prime);
-    }
-    return this;
+    return add(prime);
   }
 
   int getSum() {
@@ -166,6 +156,11 @@ class Factors {
       sum += factor;
     }
     return sum + (countOf2 * 2);
+  }
+
+  private Factors add(int x) {
+    this.factors[length++] = x;
+    return this;
   }
 }
 
