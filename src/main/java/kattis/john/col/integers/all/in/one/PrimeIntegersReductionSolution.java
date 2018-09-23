@@ -1,6 +1,7 @@
 package kattis.john.col.integers.all.in.one;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.io.BufferedReader;
@@ -158,10 +159,6 @@ class Factors {
     return this;
   }
 
-  public List<Integer> getList() {
-    return factors;
-  }
-
   public int getSum() {
     int sum = 0;
     for (int factor : factors) {
@@ -174,6 +171,66 @@ class Factors {
     for (int i = 0; i < power; i++) {
       list.add(2);
     }
+  }
+}
+
+class FactorsWithArray {
+
+  private int[] factors;
+
+  private FactorsWithArray(int ...factors) {
+    this.factors = factors;
+  }
+
+  public static FactorsWithArray of(int x) {
+    return new FactorsWithArray(x);
+  }
+
+  public static FactorsWithArray of(int a, int b) {
+    return new FactorsWithArray(a, b);
+  }
+
+  public static FactorsWithArray powerOf2(int power) {
+    int[] factors = new int[power];
+    Arrays.fill(factors, 2);
+    return new FactorsWithArray(factors);
+  }
+
+  public static FactorsWithArray of(FactorsWithArray factorsOfA, FactorsWithArray factorsOfB) {
+    int[] factors = Arrays.copyOf(factorsOfA.factors, factorsOfA.factors.length + factorsOfB.factors.length);
+    return new FactorsWithArray(factors);
+  }
+
+  public FactorsWithArray combinedWithPowerOf2(int counterOf2) {
+    if (counterOf2 > 0) {
+      factors = addNTimes2ToList(counterOf2, factors);
+    }
+    return this;
+  }
+
+  public FactorsWithArray includingPrime(int prime) {
+    if (prime != 1) {
+      factors = Arrays.copyOf(factors, factors.length + 1);
+      factors[factors.length - 1] = prime;
+    }
+    return this;
+  }
+
+  public int getSum() {
+    int sum = 0;
+    for (int factor : factors) {
+      sum += factor;
+    }
+    return sum;
+  }
+
+  private static int[] addNTimes2ToList(int power, int[] factors) {
+    int originalLength = factors.length;
+    int[] newFactors = Arrays.copyOf(factors, originalLength + power);
+    for (int i = originalLength; i < originalLength + power; i++) {
+      newFactors[i] = 2;
+    }
+    return newFactors;
   }
 }
 
